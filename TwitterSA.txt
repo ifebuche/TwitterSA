@@ -1,0 +1,95 @@
+##########################################
+## This file should be in the same directory as the captured tweet file in json format.
+###########################################
+
+import pandas, glob #import pandas for reading the file and extracting the 'text' field which is the tweet itself
+from textblob import TextBlob #TextBlob is the library I use to analyze the tweets for sentiments
+import matplotlib.pyplot as plt
+
+#Ask user to indicate which json file they want to analyze
+theFile=input("Which file do you want to analyze? Please write filename and extension: ")
+tips = "1. Is the file in the same directory as the script? \n2. Do you have a typo in the name? \n3. Have you entered the correct filename and path in the format 'filename.format?'"
+
+#Search for the file in the current directoty and offer tips if it doesn't exist
+if theFile in glob.glob('*'): #conditionally search the current folder for any file named theFile which is the name of the file user put in. if it exists indented block runs
+    print("theFile exists")
+    
+    df=pandas.read_json(theFile, lines=True)
+    tweets=df.text
+    print("We have: " + str(len(tweets)) + "tweets in this file!")
+    polarity = 0
+    positive = 0
+    negative = 0
+    neutral = 0
+
+    for tweet in tweets:
+        analysis=TextBlob(str(tweet))
+        polarity += analysis.sentiment.polarity
+        if (analysis.sentiment.polarity == 0):
+            neutral += 1
+        elif (analysis.sentiment.polarity < 0.00):
+            negative += 1
+        elif (analysis.sentiment.polarity > 0.00):
+            positive += 1
+
+    print("positive tweets are: " + str(positive))# +" "+ "which is: " + str(positive/len(tweets)*100)+"percent")
+    print("negative tweets are: " + str(negative))#+" "+ "which is: " + str(negative/len(tweets)*100))
+    print("neutral tweets are: " + str(neutral))#+" "+ "which is: " + str(neutral/len(tweets)*100))
+    
+else: #if the file doesn't exist the following happens
+    print("That file is not in the directory bros"+ "\n") #\n = new line.
+    print("Some tips" + "\n" + tips)
+    print("Please check and run the script again")
+    
+# Data to plot
+labels = 'positive', 'negative'
+sizes = [positive, negative]
+colors = ['gold', 'yellowgreen']
+explode = (0.1, 0)  # explode 1st slice
+ 
+# Plot
+plt.pie(sizes, explode=explode, labels=labels, colors=colors,
+        autopct='%1.1f%%', shadow=True, startangle=140)
+ 
+plt.axis('equal')
+plt.title("Sentiment Analysis for " + " " + theFile + " " + "file" + "\n" + "with a total of " + str(len(tweets)) +" " + "tweets")
+plt.show()
+
+
+#################
+#Device Analysis
+#This part summarises the devices from which tweets came
+#################
+
+
+device=df.loc[:,"source"]
+def device_count(d):
+    android=0
+    iOS=0
+    for line in device:
+        if "android" in line:
+            android = android+1
+        elif "iphone" in line:
+            iOS +=1
+        elif "ipad" in line:
+            iOS +=1
+    print("There are" + " "+ str(android) + " " + "android devices")
+    print("There are" +" "+ str(iOS) + " " + "iOS devices")
+
+    # Data to plot
+    labels = 'Android', 'iOS'
+    sizes = [android, iOS]
+    colors = ['gold', 'yellowgreen']
+    explode = (0.1, 0)  # explode 1st slice
+
+    # Plot
+    plt.pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%', colors=colors,shadow=True, startangle=140)
+
+    plt.axis('equal')
+    plt.title("Share of Android/iOS Devices")
+    plt.show()
+
+device_count(device)
+###########################################
+###Imagine running this code on the fly as tweets are streaming? 
+###########################################
